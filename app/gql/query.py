@@ -40,4 +40,4 @@ class Query(ObjectType):
 
     @staticmethod
     def resolve_attack_results_by_type(root, info, target_type_id):
-        return get_mission_result_by_attack(target_type_id)
+        return get_mission_result_by_attack(target_type_id).unwrap()

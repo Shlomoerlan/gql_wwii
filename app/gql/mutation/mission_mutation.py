@@ -43,6 +43,7 @@ class UpdateMissionAttackResult(Mutation):
         lost_aircraft = Int(required=True)
 
     mission = Field(lambda: MissionType)
+    message = String()
 
     @staticmethod
     def mutate(root, info, mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft):
@@ -50,7 +51,9 @@ class UpdateMissionAttackResult(Mutation):
             mission_id, returned_aircraft, failed_aircraft,
             damaged_aircraft, lost_aircraft
         )
-        return UpdateMissionAttackResult(mission=updated_mission)
+        if isinstance(updated_mission, Success):
+            return UpdateMissionAttackResult(mission=updated_mission, message='success')
+        return UpdateAttackResult(mission=None,message=updated_mission.failure())
 
 
 class UpdateAttackResult(Mutation):
@@ -62,6 +65,7 @@ class UpdateAttackResult(Mutation):
         lost_aircraft = Int(required=True)
 
     mission = Field(lambda: MissionType)
+    message = String()
 
     @staticmethod
     def mutate(root, info, mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft):
@@ -69,7 +73,9 @@ class UpdateAttackResult(Mutation):
             mission_id, returned_aircraft, failed_aircraft,
             damaged_aircraft, lost_aircraft
         )
-        return UpdateAttackResult(mission=updated_mission)
+        if isinstance(updated_mission, Success):
+            return UpdateAttackResult(mission=updated_mission, message='success')
+        return UpdateAttackResult(mission=None,message=updated_mission.failure())
 
 
 class DeleteMission(Mutation):
@@ -77,11 +83,12 @@ class DeleteMission(Mutation):
         mission_id = Int(required=True)
 
     mission = Field(lambda: MissionType)
+    message = String()
 
     @staticmethod
     def mutate(root, info, mission_id):
         result = delete_mission(mission_id)
         if isinstance(result, Success):
-            return DeleteMission(mission=result.unwrap())
-        else:
-            return DeleteMission(error=result.unwrap())
+            return DeleteMission(mission=result.unwrap(), message='success')
+
+        return DeleteMission(mission=None, message=result.unwrap())

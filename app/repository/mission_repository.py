@@ -46,18 +46,22 @@ def get_mission_by_industry(industry: str) -> List[Mission]:
         ).all()
         return missions
 
-def get_mission_result_by_attack(target_type_id: int):
-    with session_maker() as session:
-        results = session.query(
-            Mission.aircraft_returned.label("returned_aircraft"),
-            Mission.aircraft_failed.label("failed_aircraft"),
-            Mission.aircraft_damaged.label("damaged_aircraft"),
-            Mission.aircraft_lost.label("lost_aircraft"),
-            Target.target_priority.label("damage_assessment")
-        ).join(Target).filter(
-            Target.target_type_id == target_type_id
-        ).all()
-        return results
+def get_mission_result_by_attack(target_type_id: int) -> Result[Mission, str]:
+    try:
+        with session_maker() as session:
+            results = session.query(
+                Mission.aircraft_returned.label("returned_aircraft"),
+                Mission.aircraft_failed.label("failed_aircraft"),
+                Mission.aircraft_damaged.label("damaged_aircraft"),
+                Mission.aircraft_lost.label("lost_aircraft"),
+                Target.target_priority.label("damage_assessment")
+            ).join(Target).filter(
+                Target.target_type_id == target_type_id
+            ).all()
+            return Success(results)
+    except Exception as e:
+        session.rollback()
+        return Failure(str(e))
 
 def add_mission(mission_date: date, airborne_aircraft: int, attacking_aircraft: int, bombing_aircraft: int,
                aircraft_returned: int, aircraft_failed: int, aircraft_damaged: int, aircraft_lost: int) -> Result[Mission, str]:
@@ -82,32 +86,41 @@ def add_mission(mission_date: date, airborne_aircraft: int, attacking_aircraft: 
         return Failure(str(e))
 
 
-def update_mission_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft):
-    with session_maker() as session:
-        mission = session.query(Mission).filter_by(mission_id=mission_id).first()
-        if mission:
+def update_mission_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft) -> Result[Mission, str]:
+    try:
+        with session_maker() as session:
+            mission = session.query(Mission).filter_by(mission_id=mission_id).first()
+            if mission:
+                mission.aircraft_returned = returned_aircraft
+                mission.aircraft_failed = failed_aircraft
+                mission.aircraft_damaged = damaged_aircraft
+                mission.aircraft_lost = lost_aircraft
+                session.commit()
+                session.refresh(mission)
+            return Success(mission)
+    except Exception as e:
+        session.rollback()
+        return Failure(str(e))
+
+
+def update_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft,
+                         lost_aircraft) -> Result[Mission, str]:
+    try:
+        with session_maker() as session:
+            mission = session.query(Mission).filter_by(mission_id=mission_id).first()
+            if not mission:
+                raise ValueError("Mission not found")
             mission.aircraft_returned = returned_aircraft
             mission.aircraft_failed = failed_aircraft
             mission.aircraft_damaged = damaged_aircraft
             mission.aircraft_lost = lost_aircraft
             session.commit()
             session.refresh(mission)
-        return mission
+            return Success(mission)
+    except Exception as e:
+        session.rollback()
+        return Failure(str(e))
 
-
-def update_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft,
-                         lost_aircraft):
-    with session_maker() as session:
-        mission = session.query(Mission).filter_by(mission_id=mission_id).first()
-        if not mission:
-            raise ValueError("Mission not found")
-        mission.aircraft_returned = returned_aircraft
-        mission.aircraft_failed = failed_aircraft
-        mission.aircraft_damaged = damaged_aircraft
-        mission.aircraft_lost = lost_aircraft
-        session.commit()
-        session.refresh(mission)
-        return mission
 
 def delete_mission(mission_id: int) -> Result[Mission, str]:
     with (session_maker() as session):
