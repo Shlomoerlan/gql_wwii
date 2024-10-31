@@ -19,7 +19,7 @@ class Query(ObjectType):
         return get_all_missions()
     @staticmethod
     def resolve_missions_by_date_range(root, info, start_date, end_date):
-        return get_missions_by_date_range(start_date, end_date)
+        return get_missions_by_date_range(start_date, end_date).unwrap()
 
     @staticmethod
     def resolve_mission_by_id(root, info, mission_id):

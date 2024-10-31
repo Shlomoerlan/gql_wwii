@@ -1,6 +1,6 @@
 from graphene import Mutation, Int, String, Field
 
-from app.models import TargetType
+from app.gql.types import TargetType
 from app.repository.target_repository import add_target
 
 
@@ -16,5 +16,8 @@ class AddTarget(Mutation):
 
     @staticmethod
     def mutate(root, info, mission_id, target_industry, city_id, target_type_id, target_priority):
-        new_target = add_target(mission_id, target_industry, city_id, target_type_id, target_priority)
+        new_target = add_target(
+            mission_id, target_industry, city_id,
+            target_type_id, target_priority
+        )
         return AddTarget(target=new_target)

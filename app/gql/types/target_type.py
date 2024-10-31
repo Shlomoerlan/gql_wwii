@@ -8,3 +8,4 @@ class TargetType(ObjectType):
     city_id = Int()
     target_type_id = Int()
     target_priority = Int()
+
