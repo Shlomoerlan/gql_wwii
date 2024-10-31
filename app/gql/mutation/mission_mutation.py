@@ -20,17 +20,9 @@ class AddMission(Mutation):
     @staticmethod
     def mutate(root, info, mission_date, airborne_aircraft, attacking_aircraft, bombing_aircraft,
                aircraft_returned, aircraft_failed, aircraft_damaged, aircraft_lost):
-        new_mission = Mission(
-            mission_date=mission_date,
-            airborne_aircraft=airborne_aircraft,
-            attacking_aircraft=attacking_aircraft,
-            bombing_aircraft=bombing_aircraft,
-            aircraft_returned=aircraft_returned,
-            aircraft_failed=aircraft_failed,
-            aircraft_damaged=aircraft_damaged,
-            aircraft_lost=aircraft_lost
-        )
-        add_mission(new_mission)
+        new_mission = add_mission(mission_date, airborne_aircraft, attacking_aircraft,
+                                  bombing_aircraft, aircraft_returned, aircraft_failed,
+                                  aircraft_damaged, aircraft_lost)
         return AddMission(mission=new_mission)
 
 

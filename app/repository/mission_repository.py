@@ -48,8 +48,19 @@ def get_mission_result_by_attack(target_type_id):
         ).all()
         return results
 
-def add_mission(mission: Mission):
+def add_mission(mission_date, airborne_aircraft, attacking_aircraft, bombing_aircraft,
+               aircraft_returned, aircraft_failed, aircraft_damaged, aircraft_lost):
     with session_maker() as session:
+        mission = Mission(
+            mission_date=mission_date,
+            airborne_aircraft=airborne_aircraft,
+            attacking_aircraft=attacking_aircraft,
+            bombing_aircraft=bombing_aircraft,
+            aircraft_returned=aircraft_returned,
+            aircraft_failed=aircraft_failed,
+            aircraft_damaged=aircraft_damaged,
+            aircraft_lost=aircraft_lost
+        )
         session.add(mission)
         session.commit()
         session.refresh(mission)
