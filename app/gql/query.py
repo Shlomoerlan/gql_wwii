@@ -23,7 +23,7 @@ class Query(ObjectType):
 
     @staticmethod
     def resolve_mission_by_id(root, info, mission_id):
-        return get_mission_by_id(mission_id)
+        return get_mission_by_id(mission_id).unwrap()
 
     @staticmethod
     def resolve_missions_by_country(root, info, country_name):

@@ -1,3 +1,6 @@
+from datetime import date
+from typing import List
+
 from sqlalchemy import and_
 from app.db.database import session_maker
 from app.models import Mission, Country, Target, City
@@ -9,7 +12,7 @@ def get_all_missions():
         return session.query(Mission).all()
 
 
-def get_missions_by_date_range(start_date, end_date):
+def get_missions_by_date_range(start_date: date, end_date: date):
     try:
         with session_maker() as session:
             missions = session.query(Mission).filter(
@@ -20,27 +23,30 @@ def get_missions_by_date_range(start_date, end_date):
         session.rollback()
         return Failure(str(e))
 
-def get_mission_by_id(mission_id):
-    
-    with session_maker() as session:
-        mission = session.query(Mission).filter(Mission.mission_id == mission_id).first()
-        return mission
+def get_mission_by_id(mission_id: int) -> Result[Mission, str]:
+    try:
+        with session_maker() as session:
+            mission = session.query(Mission).filter(Mission.mission_id == mission_id).first()
+            return Success(mission)
+    except Exception as e:
+        session.rollback()
+        return Failure(str(e))
 
-def get_mission_by_country(country_name):
+def get_mission_by_country(country_name: str) -> List[Mission]:
     with session_maker() as session:
         missions = session.query(Mission).join(Mission.targets).join(Target.city).join(City.country).filter(
             Country.country_name == country_name
         ).all()
         return missions
 
-def get_mission_by_industry(industry):
+def get_mission_by_industry(industry: str) -> List[Mission]:
     with session_maker() as session:
         missions = session.query(Mission).join(Mission.targets).filter(
             Target.target_industry == industry
         ).all()
         return missions
 
-def get_mission_result_by_attack(target_type_id):
+def get_mission_result_by_attack(target_type_id: int):
     with session_maker() as session:
         results = session.query(
             Mission.aircraft_returned.label("returned_aircraft"),
@@ -53,23 +59,27 @@ def get_mission_result_by_attack(target_type_id):
         ).all()
         return results
 
-def add_mission(mission_date, airborne_aircraft, attacking_aircraft, bombing_aircraft,
-               aircraft_returned, aircraft_failed, aircraft_damaged, aircraft_lost):
-    with session_maker() as session:
-        mission = Mission(
-            mission_date=mission_date,
-            airborne_aircraft=airborne_aircraft,
-            attacking_aircraft=attacking_aircraft,
-            bombing_aircraft=bombing_aircraft,
-            aircraft_returned=aircraft_returned,
-            aircraft_failed=aircraft_failed,
-            aircraft_damaged=aircraft_damaged,
-            aircraft_lost=aircraft_lost
-        )
-        session.add(mission)
-        session.commit()
-        session.refresh(mission)
-        return mission
+def add_mission(mission_date: date, airborne_aircraft: int, attacking_aircraft: int, bombing_aircraft: int,
+               aircraft_returned: int, aircraft_failed: int, aircraft_damaged: int, aircraft_lost: int) -> Result[Mission, str]:
+    try:
+        with session_maker() as session:
+            mission = Mission(
+                mission_date=mission_date,
+                airborne_aircraft=airborne_aircraft,
+                attacking_aircraft=attacking_aircraft,
+                bombing_aircraft=bombing_aircraft,
+                aircraft_returned=aircraft_returned,
+                aircraft_failed=aircraft_failed,
+                aircraft_damaged=aircraft_damaged,
+                aircraft_lost=aircraft_lost
+            )
+            session.add(mission)
+            session.commit()
+            session.refresh(mission)
+            return Success(mission)
+    except Exception as e:
+        session.rollback()
+        return Failure(str(e))
 
 
 def update_mission_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft):

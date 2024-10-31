@@ -19,6 +19,7 @@ class AddMission(Mutation):
         aircraft_lost = Int(required=True)
 
     mission = Field(lambda: MissionType)
+    message = Field(lambda: String)
 
     @staticmethod
     def mutate(root, info, mission_date, airborne_aircraft, attacking_aircraft, bombing_aircraft,
@@ -28,7 +29,10 @@ class AddMission(Mutation):
             bombing_aircraft, aircraft_returned, aircraft_failed,
             aircraft_damaged, aircraft_lost
         )
-        return AddMission(mission=new_mission)
+        if isinstance(new_mission, Success):
+            return AddMission(mission=new_mission.unwrap())
+        return AddMission(message=new_mission.failure())
+        
 
 
 class UpdateMissionAttackResult(Mutation):
