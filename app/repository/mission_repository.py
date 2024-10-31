@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from app.db.database import session_maker
 from app.models import Mission, Country, Target, City
 from returns.result import Result, Success, Failure
@@ -121,3 +121,45 @@ def delete_mission(mission_id: int) -> Result[Mission, str]:
         except Exception as e:
             session.rollback()
             return Failure(str(e))
+
+# def get_mission_statistics_by_city(city_name):
+#     with session_maker() as s:
+#         results = s.query(
+#             City.city_name,
+#             func.count(Mission.mission_id).label("mission_count"),
+#             func.avg(Target.target_priority).label("average_target_priority")
+#         ).join(Target, Target.city_id == City.city_id) \
+#             .join(Mission, Mission.mission_id == Target.mission_id) \
+#             .group_by(City.city_name) \
+#             .all()
+#
+#         return results
+
+
+
+def get_mission_statistics_by_city(city_name: str) -> Result[dict, str]:
+    try:
+        with session_maker() as session:
+            result = session.query(
+                City.city_name,
+                func.count(Mission.mission_id).label("mission_count"),
+                func.avg(Target.target_priority).label("average_target_priority")
+            ).join(Target, Target.city_id == City.city_id) \
+                .join(Mission, Mission.mission_id == Target.mission_id) \
+                .filter(City.city_name == city_name) \
+                .group_by(City.city_name) \
+                .first()
+
+            if result is None:
+                return Failure(f"No data found for city: {city_name}")
+
+            stats = {
+                "city_name": result.city_name,
+                "mission_count": result.mission_count,
+                "average_target_priority": result.average_target_priority
+            }
+
+            return Success(stats)
+    except Exception as e:
+        return Failure(str(e))
+print(get_mission_statistics_by_city("100 AIRCRAFT ON BEACH").unwrap())

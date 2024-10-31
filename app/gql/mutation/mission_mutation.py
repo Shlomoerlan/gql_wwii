@@ -32,7 +32,7 @@ class AddMission(Mutation):
         if isinstance(new_mission, Success):
             return AddMission(mission=new_mission.unwrap())
         return AddMission(message=new_mission.failure())
-        
+
 
 
 class UpdateMissionAttackResult(Mutation):
