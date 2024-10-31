@@ -19,7 +19,7 @@ class AddMission(Mutation):
         aircraft_lost = Int(required=True)
 
     mission = Field(lambda: MissionType)
-    message = Field(lambda: String)
+    message = String()
 
     @staticmethod
     def mutate(root, info, mission_date, airborne_aircraft, attacking_aircraft, bombing_aircraft,
@@ -30,8 +30,8 @@ class AddMission(Mutation):
             aircraft_damaged, aircraft_lost
         )
         if isinstance(new_mission, Success):
-            return AddMission(mission=new_mission.unwrap())
-        return AddMission(message=new_mission.failure())
+            return AddMission(mission=new_mission.unwrap(), message='success')
+        return AddMission(mission=None,message=new_mission.failure())
 
 
 
@@ -77,7 +77,6 @@ class DeleteMission(Mutation):
         mission_id = Int(required=True)
 
     mission = Field(lambda: MissionType)
-    error = String()
 
     @staticmethod
     def mutate(root, info, mission_id):
@@ -85,5 +84,4 @@ class DeleteMission(Mutation):
         if isinstance(result, Success):
             return DeleteMission(mission=result.unwrap())
         else:
-            print(result.unwrap())
             return DeleteMission(error=result.unwrap())

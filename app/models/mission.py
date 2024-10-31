@@ -1,4 +1,3 @@
-# Mission model
 from sqlalchemy import Column, Integer, Date
 from sqlalchemy.orm import relationship
 from app.models import Base

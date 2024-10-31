@@ -1,8 +1,8 @@
 from graphene import ObjectType, List, Date, Field, Int, String
 
-from app.gql.types import MissionType, AttackResultType
+from app.gql.types import MissionType, AttackResultType, MissionStatisticsType
 from app.repository.mission_repository import get_all_missions, get_missions_by_date_range, get_mission_by_id, \
-    get_mission_by_country, get_mission_by_industry, get_mission_result_by_attack
+    get_mission_by_country, get_mission_by_industry, get_mission_result_by_attack, get_mission_statistics_for_city
 
 
 class Query(ObjectType):
@@ -12,6 +12,11 @@ class Query(ObjectType):
     missions_by_country = List(MissionType, country_name=String(required=True))
     missions_by_industry = List(MissionType, industry=String(required=True))
     attack_results_by_type = List(AttackResultType, target_type_id=Int(required=True))
+    get_mission_statistics_for_city = Field(MissionStatisticsType, city_name=String(required=True))
+
+    @staticmethod
+    def resolve_get_mission_statistics_for_city(root, info, city_name):
+        return get_mission_statistics_for_city(city_name)
 
 
     @staticmethod
