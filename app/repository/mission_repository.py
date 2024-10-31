@@ -34,3 +34,37 @@ def get_mission_by_industry(industry):
             Target.target_industry == industry
         ).all()
         return missions
+
+def get_mission_result_by_attack(target_type_id):
+    with session_maker() as session:
+        results = session.query(
+            Mission.aircraft_returned.label("returned_aircraft"),
+            Mission.aircraft_failed.label("failed_aircraft"),
+            Mission.aircraft_damaged.label("damaged_aircraft"),
+            Mission.aircraft_lost.label("lost_aircraft"),
+            Target.target_priority.label("damage_assessment")
+        ).join(Target).filter(
+            Target.target_type_id == target_type_id
+        ).all()
+        return results
+
+def add_mission(mission: Mission):
+    with session_maker() as session:
+        session.add(mission)
+        session.commit()
+        session.refresh(mission)
+        return mission
+
+
+def update_mission_attack_result(mission_id, returned_aircraft, failed_aircraft, damaged_aircraft, lost_aircraft, damage_assessment):
+    with session_maker() as session:
+        mission = session.query(Mission).filter_by(mission_id=mission_id).first()
+        if mission:
+            mission.returned_aircraft = returned_aircraft
+            mission.failed_aircraft = failed_aircraft
+            mission.damaged_aircraft = damaged_aircraft
+            mission.lost_aircraft = lost_aircraft
+            mission.damage_assessment = damage_assessment
+            session.commit()
+            session.refresh(mission)
+        return mission
